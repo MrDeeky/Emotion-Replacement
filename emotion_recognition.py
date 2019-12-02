@@ -1,7 +1,3 @@
-try:
-  %tensorflow_version 2.x
-except Exception:
-  pass
 import tensorflow as tf
 from tensorflow.keras.layers import Conv2D, BatchNormalization, Activation, SeparableConv2D, MaxPooling2D, Add, GlobalAveragePooling2D, Input
 from tensorflow.keras import Model
