@@ -6,12 +6,12 @@ import tensorflow as tf
 from tensorflow.keras.layers import Conv2D, BatchNormalization, Activation, SeparableConv2D, MaxPooling2D, Add, GlobalAveragePooling2D, Input
 from tensorflow.keras import Model
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-
 import pandas as pd
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection  import train_test_split
+
 
 def create_dataset(dataset, expression):
     # convert pixels to original image size (48x48) and resize to (128, 128)
@@ -34,6 +34,7 @@ def create_dataset(dataset, expression):
       emotions.append(expression[value])
     emotions = np.array(emotions)
  return faces, emotions
+ 
  
  def XCeption(input):
   out = input
@@ -60,7 +61,12 @@ def create_dataset(dataset, expression):
   out = Activation('softmax')(out)
 
   return Model(input, out)
- 
+
+
+def build_cnn_project(input):
+    return XCeption(Input((128, 128, 1)))
+    
+    
 if __name__ == "__main__":
     # 0=Angry, 1=Disgust, 2=Fear, 3=Happy, 4=Sad, 5=Surprise, 6=Neutral
     expression = [np.array([1, 0, 0, 0, 0, 0, 0]), np.array([0, 1, 0, 0, 0, 0, 0]),
