@@ -91,6 +91,7 @@ def swap_emotion(prediction):
     gan_emotion = random.choice(possible_gan_emotions)
     gan_emotion_vector = np.zeros((1,7))
     gan_emotion_vector[0][gan_emotion] = 1
+    print(gan_emotion_vector)
     return gan_emotion_vector
     
     

@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
 import os
+import sys
 os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 from model import *
 from emotion_recognition import *
@@ -156,13 +157,18 @@ if __name__ == "__main__":
     # Load Generator network
     gan = StarGAN(Config())
     G = gan.build_generator()
-    G.load_weights('./Weights/G_weights_v4.hdf5')
+    G.load_weights('./Weights/G_weights_v3.hdf5')
     G.trainable = False
 
     classifier = build_cnn_project()
     classifier.load_weights('./Weights/emotion_recognition.h5')
 
-    img = cv.imread("./test_imgs/testface4.jpg")
+    if (len(sys.argv) == 1):
+        print('Pass in a filepath to the image you want to process')
+        print ('e.g python extract_face.py img.jpg')
+        exit(0)
+    
+    img = cv.imread(sys.argv[1])
     #img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
 
     # face locations given by x y coordinate + width and height for bounding box drawing (x y is top left of box)
@@ -172,6 +178,9 @@ if __name__ == "__main__":
 
 
     cv.imshow("full picture", img)
+    if (len(face_imgs) == 0):
+        print('no faces detected :(')
+        exit(0)
     #img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
 
     # TODO face_imgs should now store all faces, resized to 128x128, need to pass them into the models
@@ -190,12 +199,12 @@ if __name__ == "__main__":
 
         
         gan_emotion_vector = swap_emotion(emotion_vector)
-        print(gan_emotion_vector)
         face_tensor = np.expand_dims(face[0]/127.5 - 1, axis=0)
         pred = G.predict([face_tensor, gan_emotion_vector])
         
         gan_face = np.squeeze(pred)*127.5 + 127.5
-        #cv.imshow("GAN generated",gan_face)
+        
+        cv.imshow("ganface %d"%i, gan_face.astype(np.uint8))
 
         original_face_x = face[3][0]
         original_face_y = face[3][1]
