@@ -1,5 +1,7 @@
 import cv2 as cv
 import numpy as np
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 from model import *
 from emotion_recognition import *
 
@@ -65,12 +67,12 @@ def rotate_image(mat, angle):
 def resize_img(img, new_shape=(128,128)):
     return cv.resize(img, new_shape)
 
-def preProcessFaces(face_locations):
+def preProcessFaces(img, face_locations):
     # Stores tuples of np arrays and radian angles, so we can store rotated faces and info to reverse the transformation
     face_imgs = []
     
     for (x,y,w,h) in face_locations:
-        # img = cv.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
+        #img = cv.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
         face = np.copy(img[y:y+h, x:x+w])
 
         eye_locations = getEyes(eye_cascade, face)
@@ -157,14 +159,16 @@ if __name__ == "__main__":
     G.load_weights('./Weights/G_weights_v4.hdf5')
     G.trainable = False
 
+    classifier = build_cnn_project()
+    classifier.load_weights('./Weights/emotion_recognition.h5')
 
-    img = cv.imread("./test_imgs/testface7.jpg")
+    img = cv.imread("./test_imgs/testface4.jpg")
     #img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
 
     # face locations given by x y coordinate + width and height for bounding box drawing (x y is top left of box)
     face_locations = getFaces(face_cascade, img)
 
-    face_imgs = preProcessFaces(face_locations)
+    face_imgs = preProcessFaces(img, face_locations)
 
 
     cv.imshow("full picture", img)
@@ -176,10 +180,19 @@ if __name__ == "__main__":
     for i in range(len(face_imgs)):
         face = face_imgs[i]
 
-        happy_vector = np.zeros((1,7))
-        happy_vector[:,2] = 1
+        classifier_input = cv.cvtColor(face[0], cv.COLOR_BGR2GRAY)
+        classifier_input = np.expand_dims(classifier_input, axis=-1)
+        classifier_input = np.expand_dims(classifier_input, axis=0)
+        emotion_vector = classifier.predict(classifier_input)[0]
+        
+
+        emotion_vector = np.squeeze(emotion_vector)
+
+        
+        gan_emotion_vector = swap_emotion(emotion_vector)
+        print(gan_emotion_vector)
         face_tensor = np.expand_dims(face[0]/127.5 - 1, axis=0)
-        pred = G.predict([face_tensor, happy_vector])
+        pred = G.predict([face_tensor, gan_emotion_vector])
         
         gan_face = np.squeeze(pred)*127.5 + 127.5
         #cv.imshow("GAN generated",gan_face)

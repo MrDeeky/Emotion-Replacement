@@ -65,15 +65,34 @@ def build_cnn_project():
     
 def swap_emotion(prediction):
     # 0=Angry, 1=Disgust, 2=Fear, 3=Happy, 4=Sad, 5=Surprise, 6=Neutral
-    expression = [np.array([1, 0, 0, 0, 0, 0, 0]), np.array([0, 1, 0, 0, 0, 0, 0]),
-                  np.array([0, 0, 1, 0, 0, 0, 0]), np.array([0, 0, 0, 1, 0, 0, 0]),
-                  np.array([0 ,0 ,0 ,0, 1, 0 ,0]), np.array([0, 0, 0, 0, 0, 1, 0]),
-                  np.array([0, 0, 0, 0, 0, 0, 1])]
-    index = np.argmax(result)
-    new emotion = index
-    while new_emotion == index:
-        new_emotion = random.randint(0, 7)
-    return expression(new_emotion
+    expression = ['anger', 'disgust',
+                  'fear', 'happy',
+                  'sad', 'surprise',
+                  'neutral']
+    index = np.argmax(prediction)
+
+    possible_gan_emotions = [0,1,2,3,4,5,6]
+    print('detected ', expression[index])
+    if expression[index] == 'anger':
+        possible_gan_emotions.remove(2)
+    elif expression[index] == 'disgust':
+        possible_gan_emotions.remove(3)
+    elif expression[index] == 'fear':
+        possible_gan_emotions.remove(1)
+    elif expression[index] == 'happy':
+        possible_gan_emotions.remove(4)
+    elif expression[index] == 'sad':
+        possible_gan_emotions.remove(5)
+    elif expression[index] == 'surprise':
+        possible_gan_emotions.remove(6)
+    elif expression[index] == 'neutral':
+        possible_gan_emotions.remove(0)
+
+    gan_emotion = random.choice(possible_gan_emotions)
+    gan_emotion_vector = np.zeros((1,7))
+    gan_emotion_vector[0][gan_emotion] = 1
+    return gan_emotion_vector
+    
     
  
 if __name__ == "__main__":
