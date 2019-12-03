@@ -5,7 +5,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import pandas as pd
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from sklearn.model_selection  import train_test_split
 import random
 
@@ -15,52 +15,51 @@ def create_dataset(dataset, expression):
     pixels = dataset['pixels'].tolist()
     faces = []
     for sequence in pixels:
-      face = []
-      values = sequence.split(' ')
-      for value in values:
+        face = []
+        values = sequence.split(' ')
+    for value in values:
         face.append(value)
-      face = np.array(face).reshape(48, 48)
-      face = cv2.resize(face.astype('uint8'), (128, 128))
-      faces.append(face.astype('float32'))
+    face = np.array(face).reshape(48, 48)
+    face = cv2.resize(face.astype('uint8'), (128, 128))
+    faces.append(face.astype('float32'))
     faces = np.expand_dims(faces, -1)
 
     # convert emotion value to 1D vector
     emotion = dataset['emotion'].tolist()
     emotions = []
     for value in emotion:
-      emotions.append(expression[value])
+        emotions.append(expression[value])
     emotions = np.array(emotions)
- return faces, emotions
- 
- 
- def XCeption(input):
-  out = input
-  for i in range(2):
-    out = Conv2D(filters=8, kernel_size=3, padding='same')(out)
-    out = BatchNormalization()(out)
-    out = Activation('relu')(out)
+    return faces, emotions
 
-  for filter in [16, 32, 64, 128]:
-    old = Conv2D(filters=filter, kernel_size=1, strides=2, padding='same')(out)
-    old = BatchNormalization()(old)
-
+def XCeption(input):
+    out = input
     for i in range(2):
-      out = SeparableConv2D(filters=filter, kernel_size=3, padding='same')(out)
-      out = BatchNormalization()(out)
-      if i == 0:
+        out = Conv2D(filters=8, kernel_size=3, padding='same')(out)
+        out = BatchNormalization()(out)
         out = Activation('relu')(out)
 
-    out = MaxPooling2D(pool_size=3,  strides=2, padding='same')(out)
-    out = Add()([out, old])
+    for filter in [16, 32, 64, 128]:
+        old = Conv2D(filters=filter, kernel_size=1, strides=2, padding='same')(out)
+        old = BatchNormalization()(old)
 
-  out = Conv2D(filters=7, kernel_size=3, padding='same')(out)
-  out = GlobalAveragePooling2D()(out)
-  out = Activation('softmax')(out)
+        for i in range(2):
+            out = SeparableConv2D(filters=filter, kernel_size=3, padding='same')(out)
+            out = BatchNormalization()(out)
+            if i == 0:
+                out = Activation('relu')(out)
 
-  return Model(input, out)
+        out = MaxPooling2D(pool_size=3,  strides=2, padding='same')(out)
+        out = Add()([out, old])
+
+    out = Conv2D(filters=7, kernel_size=3, padding='same')(out)
+    out = GlobalAveragePooling2D()(out)
+    out = Activation('softmax')(out)
+
+    return Model(input, out)
 
 
-def build_cnn_project(input):
+def build_cnn_project():
     return XCeption(Input((128, 128, 1)))
     
     
@@ -80,9 +79,9 @@ def swap_emotion(prediction):
 if __name__ == "__main__":
     # 0=Angry, 1=Disgust, 2=Fear, 3=Happy, 4=Sad, 5=Surprise, 6=Neutral
     expression = [np.array([1, 0, 0, 0, 0, 0, 0]), np.array([0, 1, 0, 0, 0, 0, 0]),
-                  np.array([0, 0, 1, 0, 0, 0, 0]), np.array([0, 0, 0, 1, 0, 0, 0]),
-                  np.array([0 ,0 ,0 ,0, 1, 0 ,0]), np.array([0, 0, 0, 0, 0, 1, 0]),
-                  np.array([0, 0, 0, 0, 0, 0, 1])]
+                    np.array([0, 0, 1, 0, 0, 0, 0]), np.array([0, 0, 0, 1, 0, 0, 0]),
+                    np.array([0 ,0 ,0 ,0, 1, 0 ,0]), np.array([0, 0, 0, 0, 0, 1, 0]),
+                    np.array([0, 0, 0, 0, 0, 0, 1])]
     dataset = pd.read_csv('/content/drive/My Drive/fer2013.csv')
     faces, emotions = create_dataset(dataset, expression)
     
