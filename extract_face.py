@@ -79,6 +79,7 @@ def preProcessFaces(img, face_locations):
         eye_locations = getEyes(eye_cascade, face)
 
         if (len(eye_locations) != 2): # Can't classify finer grained features, just pass on the face without further processing
+            print('no eye keypoints detected, skipping rotation correction')
             face_imgs.append((resize_img(face), 0, face, (x,y,w,h)))
             continue
         
@@ -126,20 +127,22 @@ def preProcessFaces(img, face_locations):
             rotationAngleRad = -rotationAngleRad
         
         rotationAngleDeg = np.degrees(rotationAngleRad)
-        print(rotationAngleDeg)
+        print('Angle of rotation', rotationAngleDeg)
 
         # cv.circle(face, nose_centre, 1, (0,255,0), 2)
         # cv.circle(face, left_eye_centre, 1, (0,0,255), 2)
         # cv.circle(face, right_eye_centre, 1, (0,0,255), 2)
         # cv.circle(face, midpoint_eye, 1, (0,255,0), 2)
         # cv.circle(face, face_top_centre, 1, (0,255,0), 2)
-
+        # cv.imshow("face", face)
         # Only need to rotate faces that have more obvious skewed orienation, minute rotation is OK to pass into the models
         # store rotated face, angle of rotation (if any), original face, and original face coords
         # this will allow us to undo the rotation and merge a changed face back into the original photo
-        if (np.abs(rotationAngleDeg) >= 20):
+        if (np.abs(rotationAngleDeg) >= 15):
+            print("Face is relatively frontal and non-rotated, skipping rotation")
             rotated_face = rotate_image(face, rotationAngleDeg)
             face_imgs.append((resize_img(rotated_face), rotationAngleDeg, face, (x,y,w,h)))
+            # cv.imshow("rotated_face %d" % rotationAngleDeg, rotated_face)
         else:
             face_imgs.append((resize_img(face), 0, face, (x,y,w,h)))
     return face_imgs
@@ -157,7 +160,7 @@ if __name__ == "__main__":
     # Load Generator network
     gan = StarGAN(Config())
     G = gan.build_generator()
-    G.load_weights('./Weights/G_weights_v3.hdf5')
+    G.load_weights('./Weights/G_weights_v4.hdf5')
     G.trainable = False
 
     classifier = build_cnn_project()
@@ -217,7 +220,7 @@ if __name__ == "__main__":
         else:
             # If we rotated, undo the rotation, then resize, face needs to be retrieved again since rotation
             # causes an image resizing
-            unrotated_face = rotate_image(gan_face, -face[1])
+            unrotated_face = rotate_image(gan_face, -face[1]).astype(np.uint8)
             faces2 = getFaces(face_cascade, unrotated_face)
             for (x,y,w,h) in faces2:
                 resized_face = resize_img(unrotated_face[y:y+h, x:x+w], (original_face_width, original_face_height))
