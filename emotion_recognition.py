@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection  import train_test_split
+import random
 
 
 def create_dataset(dataset, expression):
@@ -63,6 +64,19 @@ def build_cnn_project(input):
     return XCeption(Input((128, 128, 1)))
     
     
+def swap_emotion(prediction):
+    # 0=Angry, 1=Disgust, 2=Fear, 3=Happy, 4=Sad, 5=Surprise, 6=Neutral
+    expression = [np.array([1, 0, 0, 0, 0, 0, 0]), np.array([0, 1, 0, 0, 0, 0, 0]),
+                  np.array([0, 0, 1, 0, 0, 0, 0]), np.array([0, 0, 0, 1, 0, 0, 0]),
+                  np.array([0 ,0 ,0 ,0, 1, 0 ,0]), np.array([0, 0, 0, 0, 0, 1, 0]),
+                  np.array([0, 0, 0, 0, 0, 0, 1])]
+    index = np.argmax(result)
+    new emotion = index
+    while new_emotion == index:
+        new_emotion = random.randint(0, 7)
+    return expression(new_emotion
+    
+ 
 if __name__ == "__main__":
     # 0=Angry, 1=Disgust, 2=Fear, 3=Happy, 4=Sad, 5=Surprise, 6=Neutral
     expression = [np.array([1, 0, 0, 0, 0, 0, 0]), np.array([0, 1, 0, 0, 0, 0, 0]),
